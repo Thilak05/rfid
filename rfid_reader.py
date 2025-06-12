@@ -9,8 +9,8 @@ FLASK_URL = 'http://127.0.0.1:5000/scan'
 
 USER_MAP = {
     '0009334653': 'Arun',
-    '0005823896': 'Thilak',
-    '0005823409': 'Hari',
+    '080058DBB1': 'Thilak',
+    '080058DD98': 'Hari',
 }
 
 def list_available_ports():
