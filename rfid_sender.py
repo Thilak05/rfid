@@ -4,7 +4,7 @@ import requests
 import time
 
 # Update the serial port to match Raspberry Pi environment
-SERIAL_PORT = '/dev/ttyUSB0'  # Use /dev/ttyAMA0 if needed
+SERIAL_PORT = '/dev/ttyS0'  # Use /dev/ttyAMA0 if needed
 BAUD_RATE = 9600
 FLASK_URL = 'http://127.0.0.1:5000/scan'
 
@@ -21,7 +21,7 @@ def list_available_ports():
 
 def send_scan(unique_id):
     name = USER_MAP.get(unique_id, 'Unknown')
-    data = {'name': name, 'unique_id': unique_id, 'action': 'exit'}
+    data = {'name': name, 'unique_id': unique_id, 'action': 'entry'}
     try:
         response = requests.post(FLASK_URL, json=data)
         print(f"Sent to Flask: {data} → Response: {response.status_code} - {response.text}")
@@ -46,14 +46,21 @@ def main():
         print(f"Connection failed: {e}")
         return
 
-    print("Listening for RFID scans... (action='exit')")
+    print("Listening for RFID scans... (action='entry')")
     try:
         while True:
             if ser.in_waiting:
-                rfid_data = ser.readline().decode('utf-8').strip()
-                if rfid_data:
-                    print(f"Scanned RFID: {rfid_data}")
-                    send_scan(rfid_data)
+                raw_data = ser.readline()  # Get raw bytes from serial
+                try:
+                    # Attempt to decode the raw bytes into a UTF-8 string
+                    rfid_data = raw_data.decode('utf-8', errors='ignore').strip()
+                    if rfid_data:
+                        print(f"Scanned RFID: {rfid_data}")
+                        send_scan(rfid_data)
+                except UnicodeDecodeError as e:
+                    print(f"Unicode decode error: {e}")
+                    # Optionally, you can print the raw data here for debugging
+                    print(f"Raw bytes received: {raw_data}")
             time.sleep(0.1)
     except KeyboardInterrupt:
         print("\nStopped by user.")
